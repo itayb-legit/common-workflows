@@ -1,0 +1,125 @@
+name: Backend Test & Build
+on:
+  workflow_call:
+    inputs:
+      SHOULD_PUSH_SHARED_PACKAGE:
+        required: true
+        type: boolean
+      SHOULD_BUILD_DOCKER:
+        required: false
+        type: boolean
+        default: true
+      SHOULD_CREATE_MIGRATION_SCRIPT:
+        type: boolean
+        required: false
+        default: false
+      DB_NAME:
+        type: string
+        required: false
+        default: ""
+      RESHARPER_VERSION:
+        type: string
+        required: false
+        default: "2021.3.3"
+      SKIP_RESHARPER:
+        type: boolean
+        required: false
+        default: false
+      SUPPORT_LEGACY_DOTNET:
+        description: "should support legacy .net version"
+        type: boolean
+        required: false
+        default: false
+      TRIVY_IGNORE:
+        description: "newline-separated list of CVEs to ignore (appending)"
+        type: string
+        required: false
+        default: ""
+      TRIVY_SKIP_FILES:
+        description: "comma-separated list of files to skip (appending)"
+        type: string
+        required: false
+        default: ""
+      BUILD_PRE_STEP:
+        type: string
+        required: false
+        default: ""
+      RUNTIME:
+        type: string
+        required: false
+        default: "dotnet"
+      RUNTIME_VERSION:
+        type: string
+        required: false
+        default: "16.14"
+      TESTS:
+        type: boolean
+        required: false
+        default: false
+      FLAKE8_SOURCE_DIR:
+        type: string
+        required: false
+        default: "src"
+      TRIVY:
+        type: boolean
+        required: false
+        default: true
+      PYTEST:
+        type: boolean
+        required: false
+        default: false
+      PYTHON_TEST_INSTALL:
+        type: boolean
+        required: false
+        default: false
+      ARTIFACTS_TO_UPLOAD:
+        type: string
+        required: false
+        default: ""
+      DOTNET_VERSION:
+        type: string
+        required: false
+        default: "6.0"
+      EF_TOOL_VERSION:
+        type: string
+        required: false
+        default: ""
+      SERVICE_DIR_PATH:
+        type: string
+        required: false
+        default: "."
+      SHOULD_USE_TESTS_MATRIX:
+        type: boolean
+        required: false
+        default: false
+      SHOULD_RUN_DOCKER_COMPOSE_INTEGRATION_TESTS:
+        type: boolean
+        required: false
+        default: false
+      POETRY:
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{inputs.RUNTIME}}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  ACTIONS_RUNNER_DEBUG: true
+  LEGIT_PACKAGES_USER: bot-legit
+  LEGIT_PACKAGES_PASSWORD: ${{ secrets.GHCR_PAT }}
+  MIGRATION_FILE_NAME: MigrationFile
+  AWS_CODEARTIFACT_REPOSITORY_URL: "legitsecurity-060145096218.d.codeartifact.us-east-1.amazonaws.com/pypi/legitsecurity/simple"
+
+jobs:
+    
+  common_with_fe:
+    uses: LegitSecurity/common-workflows/.github/workflows/fe_be_shared_tests.yaml@main # ratchet:exclude
+    with:
+      SHOULD_BUILD_DOCKER: ${{ inputs.SHOULD_BUILD_DOCKER }}
+      RUNTIME: ${{ inputs.RUNTIME }}
+      RUNTIME_VERSION: ${{ inputs.RUNTIME_VERSION }}
+      TESTS: ${{ inputs.TESTS }}
+      SERVICE_DIR_PATH: ${{ inputs.SERVICE_DIR_PATH }}
+    secrets: inherit

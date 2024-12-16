@@ -1,0 +1,102 @@
+name: Shared Lint And Tests
+on:
+  workflow_call:
+    inputs:
+      SHOULD_BUILD_DOCKER:
+        required: true
+        type: boolean
+      RUNTIME:
+        required: true
+        type: string
+      TESTS:
+        type: boolean
+        required: true
+      UNIT_TESTS:
+        type: boolean
+        default: false
+        required: false
+      RUNTIME_VERSION:
+        type: string
+        required: true
+      RUN_TS_PRUNE:
+        type: boolean
+        required: false
+        default: false
+      TSCONFIG_FILE:
+        type: string
+        required: false
+        default: "tsconfig.json"
+      SERVICE_DIR_PATH:
+        type: string
+        required: false
+        default: "."
+jobs:
+
+  check-if-helm-values-changed:
+    continue-on-error: true
+    outputs:
+      some_changed: ${{ steps.file-check.outputs.some_changed }}
+      all_changed: ${{ steps.file-check.outputs.all_changed }}
+      dev_changed: ${{ steps.file-check.outputs.dev_changed }}
+      staging_changed: ${{ steps.file-check.outputs.staging_changed }}
+      prod_changed: ${{ steps.file-check.outputs.prod_changed }}
+    if: ${{ github.event_name == 'push' }}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        with:
+          fetch-depth: 0
+    #   - name: Configure AWS Credentials
+    #     uses: aws-actions/configure-aws-credentials@48f0cb78484f48158b435f99ba5f1e3171322334
+    #     with:
+    #       aws-access-key-id: ${{ secrets.HELM_S3_ACCESS_KEY_ID }}
+    #       aws-secret-access-key: ${{ secrets.HELM_S3_SECRET_ACCESS_KEY }}
+    #       role-to-assume: ${{ secrets.READ_SECRETS_ROLE_PROD }}
+    #       role-duration-seconds: 3600
+    #       aws-region: us-east-1
+    #   - name: Read secrets from AWS Secrets Manager into environment variables
+    #     uses: aws-actions/aws-secretsmanager-get-secrets@f91b2a3e784edce744f972af1685eca7e24d2302 # ratchet:aws-actions/aws-secretsmanager-get-secrets@v2
+    #     with:
+    #       secret-ids: |
+    #         slack/hooks
+    #       parse-json-secrets: true
+      - name: Check for file changes
+        id: file-check
+        run: ls -la
+        # run: |
+        #   # Get SHA of the most recent commit and its predecessor
+        #   LATEST_SHA=$(git rev-parse HEAD)
+        #   PREV_SHA=$(git rev-parse HEAD~1)
+
+        #   # Check for changes in specific files between these two commits
+        #   DEV_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values.us-eks-dev.yaml)
+        #   STAGING_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values.us-eks-staging.yaml)
+        #   PROD_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values.us-eks-prod.yaml)
+
+        #   if [ -n "$DEV_CHANGED" ]; then
+        #     echo "DEV_CHANGED=true" >> $GITHUB_ENV
+        #     echo "dev_changed=true" >> $GITHUB_OUTPUT
+        #   else
+        #     echo "DEV_CHANGED=false" >> $GITHUB_ENV
+        #   fi
+
+        #   if [ -n "$STAGING_CHANGED" ]; then
+        #     echo "STAGING_CHANGED=true" >> $GITHUB_ENV
+        #     echo "staging_changed=true" >> $GITHUB_OUTPUT
+        #   else
+        #     echo "STAGING_CHANGED=false" >> $GITHUB_ENV
+        #   fi
+
+        #   if [ -n "$PROD_CHANGED" ]; then
+        #     echo "PROD_CHANGED=true" >> $GITHUB_ENV
+        #     echo "prod_changed=true" >> $GITHUB_OUTPUT
+        #   else
+        #     echo "PROD_CHANGED=false" >> $GITHUB_ENV
+        #   fi
+
+        #   # Set environment variables based on the detection of changes
+        #   if [ -n "$DEV_CHANGED" ] && [ -n "$STAGING_CHANGED" ] && [ -n "$PROD_CHANGED" ]; then
+        #     echo "all_changed=true" >> $GITHUB_OUTPUT
+        #   elif [ -n "$DEV_CHANGED" ] || [ -n "$STAGING_CHANGED" ] || [ -n "$PROD_CHANGED" ]; then
+        #     echo "some_changed=true" >> $GITHUB_OUTPUT
+        #   fi
