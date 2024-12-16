@@ -113,9 +113,9 @@ env:
   AWS_CODEARTIFACT_REPOSITORY_URL: "legitsecurity-060145096218.d.codeartifact.us-east-1.amazonaws.com/pypi/legitsecurity/simple"
 
 jobs:
-    
+
   common_with_fe:
-    uses: LegitSecurity/common-workflows/.github/workflows/fe_be_shared_tests.yaml@main # ratchet:exclude
+    uses: itayb-legit/common-workflows/.github/workflows/fe_be_shared_tests.yaml@main # ratchet:exclude
     with:
       SHOULD_BUILD_DOCKER: ${{ inputs.SHOULD_BUILD_DOCKER }}
       RUNTIME: ${{ inputs.RUNTIME }}
