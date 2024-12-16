@@ -40,7 +40,7 @@ jobs:
       dev_changed: ${{ steps.file-check.outputs.dev_changed }}
       staging_changed: ${{ steps.file-check.outputs.staging_changed }}
       prod_changed: ${{ steps.file-check.outputs.prod_changed }}
-    if: ${{ github.event_name == 'push' }}
+    # if: ${{ github.event_name == 'push' }}
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
