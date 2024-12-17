@@ -133,9 +133,12 @@ jobs:
 
 
       - run: |
-          echo "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}"
-          echo "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}"
-          echo "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}"
+          echo "dev changed : ${{ needs.check-if-helm-values-changed.outputs.dev_changed }}"
+          echo "stage changed : ${{ needs.check-if-helm-values-changed.outputs.staging_changed }}"
+          echo "prod changed : ${{ needs.check-if-helm-values-changed.outputs.prod_changed }}"
+          echo "some  changed : ${{ needs.check-if-helm-values-changed.outputs.some_changed }}"
+          echo "all changed : ${{ needs.check-if-helm-values-changed.outputs.all_changed }}"
+        name: Debug
 
       # - name: Prepare Slack Message
       #   run: |
