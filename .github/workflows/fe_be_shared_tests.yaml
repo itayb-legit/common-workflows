@@ -140,45 +140,47 @@ jobs:
           echo "all changed : ${{ needs.check-if-helm-values-changed.outputs.all_changed }}"
         name: Debug
 
-      # - name: Prepare Slack Message
-      #   run: |
-      #     REPO_URL="https://github.com/${{ github.repository }}"
-      #     MESSAGE="Changes detected in the repo $REPO_URL - "
-      #     CHANGES=()
-      #     UNCHANGED=()
+      - name: Prepare Slack Message
+        run: |
+          REPO_URL="https://github.com/${{ github.repository }}"
+          MESSAGE="Changes detected in the repo $REPO_URL - "
+          CHANGES=()
+          UNCHANGED=()
 
-      #     if [ "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}" == "true" ]; then
-      #       CHANGES+=("you changed the DEV helm values file")
-      #     else
-      #       UNCHANGED+=("didn't change DEV")
-      #     fi
+          if [ "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}" == "true" ]; then
+            CHANGES+=("you changed the DEV helm values file")
+          else
+            UNCHANGED+=("didn't change DEV")
+          fi
 
-      #     if [ "${{ needs.check-if-helm-values-changed.outputs.staging_changed }}" == "true" ]; then
-      #       CHANGES+=("you changed the STAGING helm values file")
-      #     else
-      #       UNCHANGED+=("didn't change STAGING")
-      #     fi
+          if [ "${{ needs.check-if-helm-values-changed.outputs.staging_changed }}" == "true" ]; then
+            CHANGES+=("you changed the STAGING helm values file")
+          else
+            UNCHANGED+=("didn't change STAGING")
+          fi
 
-      #     if [ "${{ needs.check-if-helm-values-changed.outputs.prod_changed }}" == "true" ]; then
-      #       CHANGES+=("you changed the PROD helm values file")
-      #     else
-      #       UNCHANGED+=("didn't change PROD")
-      #     fi
+          if [ "${{ needs.check-if-helm-values-changed.outputs.prod_changed }}" == "true" ]; then
+            CHANGES+=("you changed the PROD helm values file")
+          else
+            UNCHANGED+=("didn't change PROD")
+          fi
 
-      #     # Concatenate changes and unchanged messages
-      #     if [ ${#CHANGES[@]} -ne 0 ]; then
-      #       MESSAGE+="${CHANGES[*]}, "
-      #     fi
-      #     if [ ${#UNCHANGED[@]} -ne 0 ]; then
-      #       MESSAGE+="but ${UNCHANGED[*]}."
-      #     fi
+          # Concatenate changes and unchanged messages
+          if [ ${#CHANGES[@]} -ne 0 ]; then
+            MESSAGE+="${CHANGES[*]}, "
+          fi
+          if [ ${#UNCHANGED[@]} -ne 0 ]; then
+            MESSAGE+="but ${UNCHANGED[*]}."
+          fi
 
-      #     # Improve readability by adjusting the comma and 'and' placement
-      #     MESSAGE=$(echo $MESSAGE | sed 's/ , /, and /g') # Replace the last comma with 'and'
+          # Improve readability by adjusting the comma and 'and' placement
+          MESSAGE=$(echo $MESSAGE | sed 's/ , /, and /g') # Replace the last comma with 'and'
 
-      #     # Add the suffix
-      #     MESSAGE+="Please make sure this was intended."
+          # Add the suffix
+          MESSAGE+="Please make sure this was intended."
 
-      #     echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
-      #     echo "$MESSAGE" >> $GITHUB_ENV
-      #     echo "EOF" >> $GITHUB_ENV
+          echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
+          echo "$MESSAGE" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+          echo $GITHUB_ENV
