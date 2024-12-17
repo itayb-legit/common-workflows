@@ -183,4 +183,4 @@ jobs:
           echo "$MESSAGE" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-          echo $GITHUB_ENV
+          echo $MESSAGE
