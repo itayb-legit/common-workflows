@@ -71,37 +71,111 @@ jobs:
           echo "PREV_SHA=$PREV_SHA"
 
           # Check for changes in specific files between these two commits
-          DEV_CHANGED=$(git diff $PREV_SHA $LATEST_SHA -- helm/values/dev.yaml)
+          DEV_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values/dev.yaml)
           echo "DEV_CHANGED=$DEV_CHANGED"
           STAGING_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values/stage.yaml)
           echo "STAGING_CHANGED=$STAGING_CHANGED"
           PROD_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values/prod.yaml)
           echo "PROD_CHANGED=$PROD_CHANGED"
 
-        #   if [ -n "$DEV_CHANGED" ]; then
-        #     echo "DEV_CHANGED=true" >> $GITHUB_ENV
-        #     echo "dev_changed=true" >> $GITHUB_OUTPUT
-        #   else
-        #     echo "DEV_CHANGED=false" >> $GITHUB_ENV
-        #   fi
+          if [ -n "$DEV_CHANGED" ]; then
+            echo "DEV_CHANGED=true" >> $GITHUB_ENV
+            echo "dev_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "DEV_CHANGED=false" >> $GITHUB_ENV
+          fi
 
-        #   if [ -n "$STAGING_CHANGED" ]; then
-        #     echo "STAGING_CHANGED=true" >> $GITHUB_ENV
-        #     echo "staging_changed=true" >> $GITHUB_OUTPUT
-        #   else
-        #     echo "STAGING_CHANGED=false" >> $GITHUB_ENV
-        #   fi
+          if [ -n "$STAGING_CHANGED" ]; then
+            echo "STAGING_CHANGED=true" >> $GITHUB_ENV
+            echo "staging_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "STAGING_CHANGED=false" >> $GITHUB_ENV
+          fi
 
-        #   if [ -n "$PROD_CHANGED" ]; then
-        #     echo "PROD_CHANGED=true" >> $GITHUB_ENV
-        #     echo "prod_changed=true" >> $GITHUB_OUTPUT
-        #   else
-        #     echo "PROD_CHANGED=false" >> $GITHUB_ENV
-        #   fi
+          if [ -n "$PROD_CHANGED" ]; then
+            echo "PROD_CHANGED=true" >> $GITHUB_ENV
+            echo "prod_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "PROD_CHANGED=false" >> $GITHUB_ENV
+          fi
 
-        #   # Set environment variables based on the detection of changes
-        #   if [ -n "$DEV_CHANGED" ] && [ -n "$STAGING_CHANGED" ] && [ -n "$PROD_CHANGED" ]; then
-        #     echo "all_changed=true" >> $GITHUB_OUTPUT
-        #   elif [ -n "$DEV_CHANGED" ] || [ -n "$STAGING_CHANGED" ] || [ -n "$PROD_CHANGED" ]; then
-        #     echo "some_changed=true" >> $GITHUB_OUTPUT
-        #   fi
+          # Set environment variables based on the detection of changes
+          if [ -n "$DEV_CHANGED" ] && [ -n "$STAGING_CHANGED" ] && [ -n "$PROD_CHANGED" ]; then
+            echo "all_changed=true" >> $GITHUB_OUTPUT
+          elif [ -n "$DEV_CHANGED" ] || [ -n "$STAGING_CHANGED" ] || [ -n "$PROD_CHANGED" ]; then
+            echo "some_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+        
+  notify-user-helm-values-changed:
+    needs: check-if-helm-values-changed
+    if: ${{ needs.check-if-helm-values-changed.outputs.some_changed == 'true' && needs.check-if-helm-values-changed.outputs.all_changed != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      # - name: AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # ratchet:aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.HELM_S3_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.HELM_S3_SECRET_ACCESS_KEY }}
+      #     role-to-assume: ${{ secrets.HELM_S3_ROLE }}
+      #     role-duration-seconds: 3600
+      #     aws-region: us-east-1
+      #     role-session-name: CodeArtifactUploadSession
+
+
+      # - name: Read secrets from AWS Secrets Manager into environment variables
+      #   uses: aws-actions/aws-secretsmanager-get-secrets@f91b2a3e784edce744f972af1685eca7e24d2302 # ratchet:aws-actions/aws-secretsmanager-get-secrets@v2
+      #   with:
+      #     secret-ids: |
+      #       slack/hooks
+      #     parse-json-secrets: true
+
+
+      - run: |
+          echo "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}"
+          echo "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}"
+          echo "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}"
+
+      # - name: Prepare Slack Message
+      #   run: |
+      #     REPO_URL="https://github.com/${{ github.repository }}"
+      #     MESSAGE="Changes detected in the repo $REPO_URL - "
+      #     CHANGES=()
+      #     UNCHANGED=()
+
+      #     if [ "${{ needs.check-if-helm-values-changed.outputs.dev_changed }}" == "true" ]; then
+      #       CHANGES+=("you changed the DEV helm values file")
+      #     else
+      #       UNCHANGED+=("didn't change DEV")
+      #     fi
+
+      #     if [ "${{ needs.check-if-helm-values-changed.outputs.staging_changed }}" == "true" ]; then
+      #       CHANGES+=("you changed the STAGING helm values file")
+      #     else
+      #       UNCHANGED+=("didn't change STAGING")
+      #     fi
+
+      #     if [ "${{ needs.check-if-helm-values-changed.outputs.prod_changed }}" == "true" ]; then
+      #       CHANGES+=("you changed the PROD helm values file")
+      #     else
+      #       UNCHANGED+=("didn't change PROD")
+      #     fi
+
+      #     # Concatenate changes and unchanged messages
+      #     if [ ${#CHANGES[@]} -ne 0 ]; then
+      #       MESSAGE+="${CHANGES[*]}, "
+      #     fi
+      #     if [ ${#UNCHANGED[@]} -ne 0 ]; then
+      #       MESSAGE+="but ${UNCHANGED[*]}."
+      #     fi
+
+      #     # Improve readability by adjusting the comma and 'and' placement
+      #     MESSAGE=$(echo $MESSAGE | sed 's/ , /, and /g') # Replace the last comma with 'and'
+
+      #     # Add the suffix
+      #     MESSAGE+="Please make sure this was intended."
+
+      #     echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
+      #     echo "$MESSAGE" >> $GITHUB_ENV
+      #     echo "EOF" >> $GITHUB_ENV
