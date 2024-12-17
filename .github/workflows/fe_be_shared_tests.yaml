@@ -71,7 +71,7 @@ jobs:
           echo "PREV_SHA=$PREV_SHA"
 
           # Check for changes in specific files between these two commits
-          DEV_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values/dev.yaml)
+          DEV_CHANGED=$(git diff $PREV_SHA $LATEST_SHA -- helm/values/dev.yaml)
           echo "DEV_CHANGED=$DEV_CHANGED"
           STAGING_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values/stage.yaml)
           echo "STAGING_CHANGED=$STAGING_CHANGED"
