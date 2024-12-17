@@ -184,3 +184,27 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
           echo $MESSAGE
+
+      # - name: Notify Slack
+      #   uses: rtCamp/action-slack-notify@28e8b353eabda5998a2e1203aed33c5999944779
+      #   env:
+      #     SLACK_WEBHOOK: ${{ env.SLACK_HOOKS_ALERTS_DEVOPS }}
+      #     SLACK_CHANNEL: alerts-platform
+      #     SLACK_COLOR: ${{ job.status }}
+      #     SLACK_MESSAGE: ${{ env.SLACK_MESSAGE }}
+      #     SLACK_TITLE: Helm Changes Detected in a Repository
+          
+
+  update-all-prs:
+    if: ${{ github.event_name == 'push' }}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        with:
+          repository: itayb-legit/common-workflows
+          token: ${{ secrets.GHCR_PAT }}
+          
+      - name: update branches on merge
+        env:
+          INPUT_GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
+        uses: ./.github/actions/update-branches

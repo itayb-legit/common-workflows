@@ -1,0 +1,76 @@
+name: "Update all branches"
+description: "This action updates all of the branches that have auto-merge enabled to their head branch"
+runs:
+  using: "composite"
+  steps:
+  
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip==23.3.2
+        pip install PyGithub==2.1.1
+
+    - name: update all branches
+      continue-on-error: true
+      shell: python
+      env:
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_SHA: ${{ github.sha }}
+        GITHUB_REF: ${{ github.ref }}
+      run: |
+        from github import Github
+        import os
+        import sys
+
+        # Initialize the GitHub client with the provided token
+        token = os.getenv('INPUT_GITHUB_TOKEN')
+        g = Github(token)
+
+        # Get the GitHub context from environment variables
+        event_name = os.getenv('GITHUB_EVENT_NAME')
+        repository = os.getenv('GITHUB_REPOSITORY')
+        sha = os.getenv('GITHUB_SHA')
+        ref = os.getenv('GITHUB_REF')
+
+        # Check if the workflow was triggered by a push event
+        if event_name != "push":
+            print(f"Expected to be triggered by a 'push' event but received a '{event_name}' event")
+            sys.exit(1)
+
+        repo = g.get_repo(repository)
+        base = "main"
+        base_branch = repo.get_branch(base)
+        base_sha = base_branch.commit.sha
+        print(f"Fetching pull requests based on '{base}'")
+
+        # Fetch all open pull requests based on the base branch
+        open_pulls = repo.get_pulls(state='open', base=base)
+
+        # Handle each pull request
+        for pr in open_pulls:
+            print(f"Handling pull request {pr.number}")
+            
+            # Check if auto_merge is enabled
+            if pr.raw_data.get('auto_merge') is None:
+                print(f"Pull request {pr.number} does not have auto-merge enabled")
+                continue
+            pr_head_sha = pr.raw_data.get('head', {}).get('sha')
+            # Check if the PR is up to date
+            if pr_head_sha == sha:
+                print(f"Pull request {pr.number} is already up to date")
+                continue
+            
+            try:
+                # Attempt to update the PR branch
+                pr.update_branch()
+                print(f"Updated pull request {pr.number}")
+            except Exception as e:
+                print(f"Warning: {e}")
+                # Post a comment if the PR cannot be updated
+                pr.create_issue_comment("Cannot auto-update because of conflicts.")
