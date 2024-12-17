@@ -62,16 +62,21 @@ jobs:
     #       parse-json-secrets: true
       - name: Check for file changes
         id: file-check
-        run: ls -la
-        # run: |
-        #   # Get SHA of the most recent commit and its predecessor
-        #   LATEST_SHA=$(git rev-parse HEAD)
-        #   PREV_SHA=$(git rev-parse HEAD~1)
+        run: |
+          # Get SHA of the most recent commit and its predecessor
+          LATEST_SHA=$(git rev-parse HEAD)
+          PREV_SHA=$(git rev-parse HEAD~1)
 
-        #   # Check for changes in specific files between these two commits
-        #   DEV_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values.us-eks-dev.yaml)
-        #   STAGING_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values.us-eks-staging.yaml)
-        #   PROD_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/values.us-eks-prod.yaml)
+          echo "LATEST_SHA=$LATEST_SHA"
+          echo "PREV_SHA=$PREV_SHA"
+
+          # Check for changes in specific files between these two commits
+          DEV_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/dev.yaml)
+          echo "DEV_CHANGED=$DEV_CHANGED"
+          STAGING_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/stage.yaml)
+          echo "STAGING_CHANGED=$STAGING_CHANGED"
+          PROD_CHANGED=$(git diff --name-only $PREV_SHA $LATEST_SHA -- helm/prod.yaml)
+          echo "PROD_CHANGED=$PROD_CHANGED"
 
         #   if [ -n "$DEV_CHANGED" ]; then
         #     echo "DEV_CHANGED=true" >> $GITHUB_ENV
