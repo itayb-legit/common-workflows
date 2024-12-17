@@ -208,3 +208,55 @@ jobs:
         env:
           INPUT_GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
         uses: ./.github/actions/update-branches
+
+
+  helm-lint:
+    if: ${{ inputs.SHOULD_BUILD_DOCKER == true && github.event_name == 'pull_request' }}
+    runs-on: self-hosted
+    steps:
+      # - name: AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # ratchet:aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{secrets.HELM_S3_ACCESS_KEY_ID}}
+      #     aws-secret-access-key: ${{secrets.HELM_S3_SECRET_ACCESS_KEY}}
+      #     role-to-assume: ${{secrets.HELM_S3_ROLE}}
+      #     role-duration-seconds: 3600
+      #     aws-region: us-east-1
+
+      # - name: Read secrets from AWS Secrets Manager into environment variables
+      #   uses: aws-actions/aws-secretsmanager-get-secrets@5cb982bcb88b164e92093d4e3bee94b7b416731f
+      #   with:
+      #     secret-ids: |
+      #       slack/hooks
+      #     parse-json-secrets: true
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+
+      - name: yaml-lint
+        continue-on-error: true
+        uses: ibiqlik/action-yamllint@b74a2626a991d676b6ec243a6458ff86cccf2d2d
+        with:
+          file_or_dir: helm/values/*.yaml
+          no_warnings: true
+          config_data: "{extends: default, rules: {empty-values: {level: error}, line-length: disable, document-start: disable, document-end: disable}}"
+
+      # - name: helm lint
+      #   run: |
+      #     helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.14.0 \
+      #     && cd ./helm \
+      #     && yq e '.appVersion style="double"' -i Chart.yaml \
+      #     && AWS_REGION=eu-central-1 helm dep up  \
+      #     && helm lint . -f values.yaml -f values.us-eks-staging.yaml \
+      #     && helm lint . -f values.yaml -f values.us-eks-prod.yaml \
+      #     && cd ..
+      # - name: helm create templates
+      #   run: |
+      #     mkdir helm-templates \
+      #     && cd ./helm \
+      #     && helm template . -f values.yaml -f values.us-eks-staging.yaml > ../helm-templates/staging.template.yaml \
+      #     && helm template . -f values.yaml -f values.us-eks-prod.yaml > ../helm-templates/prod.template.yaml
+      # - name: "Upload templates"
+      #   uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
+      #   with:
+      #     name: helm-templates-${{ github.sha }}
+      #     path: helm-templates
