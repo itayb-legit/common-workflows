@@ -55,7 +55,7 @@ runs:
         # Handle each pull request
         for pr in open_pulls:
             print(f"Handling pull request {pr.number}")
-            print('pull requst raw data : {pr.raw_data}')
+            print(f"pull requst raw data : {pr.raw_data}")
             
             # Check if auto_merge is enabled
             if pr.raw_data.get('auto_merge') is None:
