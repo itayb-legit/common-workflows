@@ -211,7 +211,7 @@ jobs:
 
 
   helm-lint:
-    if: ${{ inputs.SHOULD_BUILD_DOCKER == true && github.event_name == 'pull_request' }}
+    # if: ${{ inputs.SHOULD_BUILD_DOCKER == true && github.event_name == 'pull_request' }}
     runs-on: self-hosted
     steps:
       # - name: AWS Credentials
