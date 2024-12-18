@@ -234,7 +234,7 @@ jobs:
 
       - name: yaml-lint
         continue-on-error: true
-        uses: ibiqlik/action-yamllint@b74a2626a991d676b6ec243a6458ff86cccf2d2d
+        uses: ibiqlik/action-yamllint
         with:
           file_or_dir: helm/values/*.yaml
           no_warnings: true
@@ -264,7 +264,7 @@ jobs:
       #     && helm template . -f values.yaml -f values.us-eks-staging.yaml > ../helm-templates/staging.template.yaml \
       #     && helm template . -f values.yaml -f values.us-eks-prod.yaml > ../helm-templates/prod.template.yaml
 
-      
+
       # - name: "Upload templates"
       #   uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
       #   with:
