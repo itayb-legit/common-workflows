@@ -243,7 +243,6 @@ jobs:
               extends: default,
               rules: {
                 empty-values: {level: error},
-                new-line-at-end-of-file: {present: true},
                 new-lines: {type: unix},
                 line-length: disable,
                 document-start: disable,
