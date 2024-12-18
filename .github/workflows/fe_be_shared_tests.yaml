@@ -234,7 +234,7 @@ jobs:
 
       - name: yaml-lint
         continue-on-error: true
-        uses: ibiqlik/action-yamllint
+        uses: ibiqlik/action-yamllint@v3
         with:
           file_or_dir: helm/values/*.yaml
           no_warnings: true
