@@ -238,8 +238,19 @@ jobs:
         with:
           file_or_dir: helm/values/*.yaml
           no_warnings: true
-          config_data: "{extends: default, rules: {empty-values: {level: error}, new-lines: {type: unix},line-length: disable, document-start: disable, document-end: disable}}"
-
+          config_data: >
+            {
+              extends: default,
+              rules: {
+                empty-values: {level: error},
+                new-line-at-end-of-file: {present: true},
+                new-lines: {type: unix},
+                line-length: disable,
+                document-start: disable,
+                document-end: disable
+              }
+            }
+              
       # - name: helm lint
       #   run: |
       #     helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.14.0 \
