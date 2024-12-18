@@ -249,12 +249,22 @@ jobs:
       #     && helm lint . -f values.yaml -f values.us-eks-staging.yaml \
       #     && helm lint . -f values.yaml -f values.us-eks-prod.yaml \
       #     && cd ..
+
+      - name: helm lint
+        run: |
+          cd ./helm \
+          && yq e '.appVersion style="double"' -i Chart.yaml \
+          && helm lint . -f values.yaml -f values/prod.yaml \
+          && cd ..
+      
       # - name: helm create templates
       #   run: |
       #     mkdir helm-templates \
       #     && cd ./helm \
       #     && helm template . -f values.yaml -f values.us-eks-staging.yaml > ../helm-templates/staging.template.yaml \
       #     && helm template . -f values.yaml -f values.us-eks-prod.yaml > ../helm-templates/prod.template.yaml
+
+      
       # - name: "Upload templates"
       #   uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
       #   with:
