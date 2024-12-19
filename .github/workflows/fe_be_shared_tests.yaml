@@ -278,3 +278,90 @@ jobs:
         with:
           name: helm-templates-${{ github.sha }}
           path: helm-templates
+
+
+  helm-template-lint:
+    needs: [helm-lint]
+    # if: ${{ inputs.SHOULD_BUILD_DOCKER == true && github.event_name == 'pull_request' }}
+    runs-on: self-hosted
+    env:
+      UTILS_DIR: ops/helm-lint-utils
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        with:
+          repository: itayb-legit/ops
+          token: ${{ secrets.GHCR_PAT }}
+          path: ops
+
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # ratchet:actions/download-artifact@v4
+        id: download-helm-templates
+        with:
+          name: helm-templates-${{ github.sha }}
+          path: helm-templates
+
+      - name: Install requierements
+        run: pip3 install -r ops/helm-lint-utils/requirements.txt
+
+      - name: Check for duplicate keys staging
+        id: prod-duplicate-keys-check
+        run: |
+          python3 $UTILS_DIR/detect-duplicat-environment-variables.py helm-templates/prod.template.yaml
+
+      - name: Check for port types prod
+        if: ${{ always() && (steps.download-helm-templates.outcome == 'success' || steps.download-helm-templates.outcome == 'failure') }}
+        id: prod-port-types-check
+        run: |
+          python3 $UTILS_DIR/ensure_ports_are_numbers.py helm-templates/prod.template.yaml
+
+  ensure-no-pr-package-version-found:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: self-hosted
+    continue-on-error: true
+    steps:
+      
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GHCR_PAT }}
+
+      - name: Download PR diff
+        run: |
+          PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
+          TARGET="https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}"
+          curl --silent --header "Accept: application/vnd.github.v3.diff" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" $TARGET -o ${{ inputs.SERVICE_DIR_PATH }}/diff.txt
+
+      - name: Check for non-standard package versions
+        run: |
+          import re
+          import os
+
+          diff_path = os.path.join('${{ inputs.SERVICE_DIR_PATH }}', 'diff.txt')
+          skipped_extensions = [".html"]
+          skipped_filenames = ["test_cveid_fetcher", "yarn", "Dockerfile"]  # Files to ignore
+
+          def check_versions_in_diff(diff_path):
+              with open(diff_path, 'r') as file:
+                  diff_content = file.read()
+
+              error = False
+              for entry in diff_content.split('diff --git'):
+                  if entry.strip():  # Check if entry is not just whitespace
+                      lines = entry.splitlines()
+                      if len(lines) > 1 and len(lines[0].split(" ")) > 2:
+                          ef = lines[0].split(" ")[2]
+                          filename, file_extension = os.path.splitext(ef)
+                          if file_extension not in skipped_extensions and not any(fn in filename for fn in skipped_filenames):
+                              for line in lines:
+                                  if line.startswith('+') and not line.startswith('+++'):  # Check only insertions
+                                      matches = re.findall(r'\d\.\d\.\d{1,4}-g\w{0,14}', line)
+                                      if any('legit' not in match for match in matches):
+                                          print(f"found PR-patterned packages reference in file: {filename}, please update to proper version")
+                                          return True  # Return on first error found
+              return False
+
+          if check_versions_in_diff(diff_path):
+              exit(1)
+          else:
+              exit(0)
+        shell: python
