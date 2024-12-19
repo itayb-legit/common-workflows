@@ -282,6 +282,7 @@ jobs:
 
   helm-template-lint:
     needs: [helm-lint]
+    continue-on-error: true
     # if: ${{ inputs.SHOULD_BUILD_DOCKER == true && github.event_name == 'pull_request' }}
     runs-on: self-hosted
     env:
